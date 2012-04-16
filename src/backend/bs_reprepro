@@ -1,0 +1,123 @@
+#! /bin/bash
+#
+# Script which takes .deb and .dsc and includes them into repository using reprepro
+
+extrep="${1:-/obs/repos/DISTRO/standard}"
+projid="${2:-DISTRO}"
+repoid="${3:-standard}"
+repodeb="/obs/debrep/"
+drepo="${repodeb}/${projid}/${repoid}/"
+dwwwrepo="/obs/repos/debian/"
+hostname="${HOSTNAME:-localhost}"
+
+# -- Setup reprepro Debian repository
+repo_setup() {
+	cd "${drepo}"/conf
+	if [ ! -f distributions ]; then
+		cat > distributions <<-EOF
+		Codename: ${repoid}
+		Suite: ${projid}
+		AlsoAcceptFor: unstable testing precise
+		Version: 0.1
+		Origin: Collabora
+		Description: Debian repository ${repoid} for project ${projid}
+		Architectures: i386 armhf source
+		Components: main target devel sdk
+		UDebComponents: main
+		DebIndices: Packages Release . .gz
+		UDebIndices: Packages Release . .gz
+		Tracking: all includechanges keepsources
+		Log: reprepro.log
+		EOF
+	fi
+	if [ ! -f incoming ]; then
+		cat > incoming <<-EOF
+		Name: ${repoid}
+		IncomingDir: ../incoming
+		TempDir: ../incoming-tmp
+		Allow: unstable>${repoid}
+		EOF
+	fi
+
+	cd "${drepo}"
+	mkdir -p incoming
+	mkdir -p incoming-tmp
+
+	reprepro export
+	reprepro createsymlinks
+
+	mkdir -p "${dwwwrepo}/${projid}/${repoid}/"
+	cd "${dwwwrepo}/${projid}/${repoid}/"
+	ln -sf "${drepo}"/pool
+	ln -sf "${drepo}"/dists
+
+	repo_sources
+}
+
+# -- Include binary packages under published repository into reprepro
+repo_update_bin () {
+cd "${drepo}"
+for pkg in $(find $extrep \( -name :full -o -name :repo \) -prune -o \( -type f -name *.deb -print \)); do
+	reprepro includedeb ${repoid} $pkg;
+done
+}
+
+# -- Include source packages under build directory into reprepro
+repo_update_src () {
+cd "${drepo}"
+for pkg in $(find /obs/build/$projid/$repoid/ \( -name :full -o -name :repo \) -prune -o \( -type f -name *.dsc -print \)); do
+	reprepro -S main -P standard includedsc ${repoid} $pkg;
+	#reprepro includedsc ${repoid} $pkg;
+done
+}
+
+# -- Clean up/Delete/Destroy Debian repository
+repo_destroy () {
+read -n 1 -s -p "WARNING: You are about to destroy "${drepo}". Are you sure? [y/N]" reply
+if [ x"$reply" = xy ] || [ x"$reply" = xY ] ; then
+	rm -rf "${drepo}"
+	rm -f "${dwwwrepo}/${projid}/${repoid}/"/pool
+	rm -f "${dwwwrepo}/${projid}/${repoid}/"/dists
+	rm -rf "${dwwwrepo}/${projid}/${repoid}/"/apt
+	exit 0
+fi
+}
+
+# -- Create sources.list to help out build dependency parser
+repo_sources () {
+mkdir -p "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/"
+mkdir -p "${dwwwrepo}/${projid}/${repoid}/apt/preferences.d/"
+
+cat > "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/${repoid}.list" <<-EOF
+deb		http://${hostname}:82/debian/${projid}/${repoid} ${repoid} main target devel sdk
+deb-src	http://${hostname}:82/debian/${projid}/${repoid} ${repoid} main target devel sdk
+EOF
+
+cat > "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/pristine.list" <<-EOF
+deb-src	http://${hostname}:83/ collabora main
+EOF
+
+cat > "${dwwwrepo}/${projid}/${repoid}/apt/preferences.d/distro" <<-EOF
+Package: *
+Pin: release n=${repoid}
+Pin-Priority: 900
+EOF
+
+}
+
+# -- Main
+
+mkdir -p /obs/log/reprepro/
+exec >> /obs/log/reprepro/reprepro-$(date +%Y%m%d-%H%M).log 2>&1
+
+echo "Including $extrep deb files. Including /obs/build/$projid/$repoid/ source."
+
+set -x
+
+if [ ! -d "${drepo}"/conf ] ; then
+	mkdir -p "${drepo}"/conf
+	repo_setup
+fi
+
+repo_update_bin
+repo_update_src
