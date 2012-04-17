@@ -547,7 +547,7 @@ sub createrepo_debian {
 
   if (-x "/usr/lib/obs/server/bs_reprepro") {
     print "    trigger reprepro update\n";
-    qsystem('chdir', $extrep, 'stdout', 'reprepro.log', "/usr/lib/obs/server/bs_reprepro', $extrep, $projid, $repoid, $repoinfo->{'title'}, '/dev/null') && print "    reprepro failed: $?\n";
+    qsystem('chdir', $extrep, 'stdout', 'reprepro.log', '/usr/lib/obs/server/bs_reprepro', $extrep, $projid, $repoid, $repoinfo->{'title'}, '/dev/null') && print "    reprepro failed: $?\n";
   }
 
   my $date = POSIX::ctime(time());
