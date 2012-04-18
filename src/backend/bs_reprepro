@@ -5,10 +5,15 @@
 extrep="${1:-/obs/repos/DISTRO/standard}"
 projid="${2:-DISTRO}"
 repoid="${3:-standard}"
-repodeb="/obs/debrep/"
+repodeb="/obs/debianrepos/"
 drepo="${repodeb}/${projid}/${repoid}/"
 dwwwrepo="/obs/repos/debian/"
 hostname="${HOSTNAME:-localhost}"
+portname="${PORTNAME:-82}"
+components="main target devel sdk tools qa"
+arches="amd64 armhf i386 source"
+alsoaccept="unstable testing precise"
+obslog="/obs/log/"
 
 # -- Setup reprepro Debian repository
 repo_setup() {
@@ -17,17 +22,18 @@ repo_setup() {
 		cat > distributions <<-EOF
 		Codename: ${repoid}
 		Suite: ${projid}
-		AlsoAcceptFor: unstable testing precise
+		AlsoAcceptFor: ${alsoaccept}
 		Version: 0.1
 		Origin: Collabora
 		Description: Debian repository ${repoid} for project ${projid}
-		Architectures: i386 armhf source
-		Components: main target devel sdk
+		Architectures: ${arches}
+		Components: ${components}
 		UDebComponents: main
 		DebIndices: Packages Release . .gz
 		UDebIndices: Packages Release . .gz
 		Tracking: all includechanges keepsources
 		Log: reprepro.log
+		Update: up-from-${hostname}
 		EOF
 	fi
 	if [ ! -f incoming ]; then
@@ -36,6 +42,16 @@ repo_setup() {
 		IncomingDir: ../incoming
 		TempDir: ../incoming-tmp
 		Allow: unstable>${repoid}
+		EOF
+	fi
+	if [ ! -f updates ]; then
+		cat > updates <<-EOF
+		Name: up-from-${hostname}
+		Method: http://${hostname}:${portname}/${projid}/${repoid}
+		Suite: ./
+		Architectures: ${arches}
+		VerifyRelease: blindtrust
+		Flat: main
 		EOF
 	fi
 
@@ -51,24 +67,30 @@ repo_setup() {
 	ln -sf "${drepo}"/pool
 	ln -sf "${drepo}"/dists
 
-	repo_sources
+	repo_gen_sources
 }
 
-# -- Include binary packages under published repository into reprepro
-repo_update_bin () {
+# -- Include (brute-force) binary packages under published repository into reprepro
+repo_includedeb_bin () {
 cd "${drepo}"
-for pkg in $(find $extrep \( -name :full -o -name :repo \) -prune -o \( -type f -name *.deb -print \)); do
-	reprepro includedeb ${repoid} $pkg;
+for pkg in $(find "${extrep}" \( -name :full -o -name :repo \) -prune -o \( -type f -name *.deb -print \)); do
+	reprepro includedeb "${repoid}" "${pkg}";
 done
 }
 
-# -- Include source packages under build directory into reprepro
-repo_update_src () {
+# -- Include (brute-force) source packages under build directory into reprepro
+repo_includedsc_src () {
 cd "${drepo}"
 for pkg in $(find /obs/build/$projid/$repoid/ \( -name :full -o -name :repo \) -prune -o \( -type f -name *.dsc -print \)); do
-	reprepro -S main -P standard includedsc ${repoid} $pkg;
+	reprepro -S main -P "${repoid}" includedsc "${repoid}" "${pkg}";
 	#reprepro includedsc ${repoid} $pkg;
 done
+}
+
+# -- Update repository
+repo_update () {
+cd "${drepo}"
+reprepro --noskipold update
 }
 
 # -- Clean up/Delete/Destroy Debian repository
@@ -84,33 +106,33 @@ fi
 }
 
 # -- Create sources.list to help out build dependency parser
-repo_sources () {
+repo_gen_sources () {
 mkdir -p "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/"
 mkdir -p "${dwwwrepo}/${projid}/${repoid}/apt/preferences.d/"
 
 cat > "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/${repoid}.list" <<-EOF
-deb		http://${hostname}:82/debian/${projid}/${repoid} ${repoid} main target devel sdk
-deb-src	http://${hostname}:82/debian/${projid}/${repoid} ${repoid} main target devel sdk
+deb		http://${hostname}:${portname}/debian/${projid}/${repoid} ${repoid} ${components}
+deb-src	http://${hostname}:${portname}/debian/${projid}/${repoid} ${repoid} ${components}
 EOF
 
-cat > "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/pristine.list" <<-EOF
-deb-src	http://${hostname}:83/ collabora main
-EOF
+## # Deprecated: used for bootstrapping, before DoD
+## cat > "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/pristine.list" <<-EOF
+## deb-src	http://${hostname}:83/ collabora main
+## EOF
 
 cat > "${dwwwrepo}/${projid}/${repoid}/apt/preferences.d/distro" <<-EOF
 Package: *
 Pin: release n=${repoid}
 Pin-Priority: 900
 EOF
-
 }
 
 # -- Main
 
-mkdir -p /obs/log/reprepro/
-exec >> /obs/log/reprepro/reprepro-$(date +%Y%m%d-%H%M).log 2>&1
+mkdir -p "${obslog}"/reprepro/
+exec >> "${obslog}"/reprepro/reprepro-$(date +%Y%m%d-%H%M).log 2>&1
 
-echo "Including $extrep deb files. Including /obs/build/$projid/$repoid/ source."
+echo "Including ${extrep} deb files. Including /obs/build/${projid}/${repoid}/ source."
 
 set -x
 
@@ -119,5 +141,4 @@ if [ ! -d "${drepo}"/conf ] ; then
 	repo_setup
 fi
 
-repo_update_bin
-repo_update_src
+repo_update
