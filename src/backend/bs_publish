@@ -545,11 +545,6 @@ sub createrepo_debian {
     rename("$extrep/Sources.new", "$extrep/Sources");
   }
 
-  if (-x "/usr/lib/obs/server/bs_reprepro") {
-    print "    trigger reprepro update\n";
-    qsystem('chdir', $extrep, 'stdout', 'reprepro.log', '/usr/lib/obs/server/bs_reprepro', $extrep, $projid, $repoid, $repoinfo->{'title'}, '/dev/null') && print "    reprepro failed: $?\n";
-  }
-
   my $date = POSIX::ctime(time());
   $date =~ s/\n//m;
   my $str = <<"EOL";
@@ -577,6 +572,15 @@ EOL
   
   }
   close(OUT) || die("close: $!\n");
+
+  # Need a moment to get Release file written
+  # sleep(2);
+
+  # update reprepro repository/mirror
+  if (-x "/usr/lib/obs/server/bs_reprepro") {
+    print "    trigger reprepro update\n";
+    qsystem('chdir', $extrep, 'stdout', 'reprepro.log', "/usr/lib/obs/server/bs_reprepro", $extrep, $projid, $repoid, $repoinfo->{'title'}, '/dev/null') && print "    reprepro failed: $?\n";
+  }
 
   # re-sign changed Release file
   if ($BSConfig::sign && -e "$extrep/Release") {

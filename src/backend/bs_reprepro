@@ -2,9 +2,12 @@
 #
 # Script which takes .deb and .dsc and includes them into repository using reprepro
 
-extrep="${1:-/obs/repos/DISTRO/standard}"
-projid="${2:-DISTRO}"
-repoid="${3:-standard}"
+_extrep="${1:-/obs/repos/DISTRO/standard}"
+_projid="${2:-DISTRO}"
+_repoid="${3:-standard}"
+extrep="$(echo ${1:-/obs/repos/DISTRO/standard}|sed 's/:/:\//g')"
+projid="$(echo ${2:-DISTRO}|sed 's/:/:\//g')"
+repoid="$(echo ${3:-standard}|sed 's/:/:\//g')"
 repodeb="/obs/debianrepos/"
 drepo="${repodeb}/${projid}/${repoid}/"
 dwwwrepo="/obs/repos/debian/"
@@ -25,12 +28,12 @@ repo_setup() {
 		AlsoAcceptFor: ${alsoaccept}
 		Version: 0.1
 		Origin: Collabora
-		Description: Debian repository ${repoid} for project ${projid}
+		Description: Debian repository ${_repoid} for project ${_projid}
 		Architectures: ${arches}
 		Components: ${components}
-		UDebComponents: main
+		#UDebComponents: main
 		DebIndices: Packages Release . .gz
-		UDebIndices: Packages Release . .gz
+		#UDebIndices: Packages Release . .gz
 		Tracking: all includechanges keepsources
 		Log: reprepro.log
 		Update: up-from-${hostname}
@@ -50,7 +53,8 @@ repo_setup() {
 		Method: http://${hostname}:${portname}/${projid}/${repoid}
 		Suite: ./
 		Architectures: ${arches}
-		VerifyRelease: blindtrust
+		#VerifyRelease: blindtrust
+		IgnoreRelease: yes
 		Flat: main
 		EOF
 	fi
@@ -129,10 +133,12 @@ EOF
 
 # -- Main
 
-mkdir -p "${obslog}"/reprepro/
-exec >> "${obslog}"/reprepro/reprepro-$(date +%Y%m%d-%H%M).log 2>&1
+#mkdir -p "${obslog}"/reprepro/
+#exec >> "${obslog}"/reprepro/reprepro-$(date +%Y%m%d-%H%M).log 2>&1
+exec >> "${obslog}"/reprepro.log 2>&1
 
-echo "Including ${extrep} deb files. Including /obs/build/${projid}/${repoid}/ source."
+# Old. To be deleted.
+# echo "Including ${extrep} deb files. Including /obs/build/${projid}/${repoid}/ source."
 
 set -x
 
