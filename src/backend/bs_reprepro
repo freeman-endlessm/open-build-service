@@ -8,35 +8,41 @@ _repoid="${3:-standard}"
 extrep="$(echo ${1:-/obs/repos/DISTRO/standard}|sed 's/:/:\//g')"
 projid="$(echo ${2:-DISTRO}|sed 's/:/:\//g')"
 repoid="$(echo ${3:-standard}|sed 's/:/:\//g')"
-repodeb="/obs/debianrepos/"
+repodeb="/tmp/debianrepos/"
 drepo="${repodeb}/${projid}/${repoid}/"
-dwwwrepo="/obs/repos/debian/"
+dwwwrepo="/tmp/repos/debian/"
 hostname="${HOSTNAME:-localhost}"
 portname="${PORTNAME:-82}"
-components="main target devel sdk tools qa"
 arches="amd64 armhf i386 source"
 alsoaccept="unstable testing precise"
-obslog="/obs/log/"
+obslog="/tmp/log/"
+codename="fake"
+distro="DISTRO"
+component="main"
+
+case "${_projid}" in
+*:*:*) IFS=: read -r distro codename component <<<"${_projid}" ;;
+esac
 
 # -- Setup reprepro Debian repository
 repo_setup() {
 	cd "${drepo}"/conf
 	if [ ! -f distributions ]; then
 		cat > distributions <<-EOF
-		Codename: ${repoid}
-		Suite: ${projid}
+		Codename: ${codename}
+		#Suite: ${projid}
 		AlsoAcceptFor: ${alsoaccept}
 		Version: 0.1
-		Origin: Collabora
+		Origin: ${distro}
 		Description: Debian repository ${_repoid} for project ${_projid}
 		Architectures: ${arches}
-		Components: ${components}
+		Components: ${component}
 		#UDebComponents: main
 		DebIndices: Packages Release . .gz
 		#UDebIndices: Packages Release . .gz
 		Tracking: all includechanges keepsources
 		Log: reprepro.log
-		Update: up-from-${hostname}
+		Update: - up-from-${hostname}
 		EOF
 	fi
 	if [ ! -f incoming ]; then
@@ -55,7 +61,7 @@ repo_setup() {
 		Architectures: ${arches}
 		#VerifyRelease: blindtrust
 		IgnoreRelease: yes
-		Flat: main
+		Flat: ${component}
 		EOF
 	fi
 
@@ -115,8 +121,8 @@ mkdir -p "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/"
 mkdir -p "${dwwwrepo}/${projid}/${repoid}/apt/preferences.d/"
 
 cat > "${dwwwrepo}/${projid}/${repoid}/apt/sources.list.d/${repoid}.list" <<-EOF
-deb		http://${hostname}:${portname}/debian/${projid}/${repoid} ${repoid} ${components}
-deb-src	http://${hostname}:${portname}/debian/${projid}/${repoid} ${repoid} ${components}
+deb		http://${hostname}:${portname}/debian/${projid}/${repoid} ${repoid} ${component}
+deb-src	http://${hostname}:${portname}/debian/${projid}/${repoid} ${repoid} ${component}
 EOF
 
 ## # Deprecated: used for bootstrapping, before DoD
