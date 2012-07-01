@@ -57,6 +57,7 @@ repo_setup() {
 		cat > updates <<-EOF
 		Name: up-from-${hostname}
 		Method: http://${hostname}:${portname}/${projid}/${repoid}
+		GetInRelease: no
 		Suite: ./
 		Architectures: ${arches}
 		#VerifyRelease: blindtrust
