@@ -57,13 +57,17 @@ repo_setup() {
 		cat > updates <<-EOF
 		Name: up-from-${hostname}
 		Method: http://${hostname}:${portname}/${projid}/${repoid}
-		GetInRelease: no
 		Suite: ./
 		Architectures: ${arches}
 		#VerifyRelease: blindtrust
 		IgnoreRelease: yes
 		Flat: ${component}
 		EOF
+	fi
+	# Since reprepro 4.12.0, need to ignore InRelease file
+	if dpkg --compare-versions `reprepro --version 2>&1 | awk '{ print $NF }'` ge 4.12.0
+	then
+		echo "GetInRelease: no" >> updates
 	fi
 
 	cd "${drepo}"
