@@ -16,11 +16,12 @@ portname="${PORTNAME:-82}"
 arches="amd64 armhf i386 source"
 alsoaccept="unstable testing precise"
 obslog="/obs/log/"
-codename="fake"
+codename="${projid}"
 distro="DISTRO"
 component="main"
 
 case "${_projid}" in
+home:*) :: ;;
 *:*:*) IFS=: read -r distro codename component <<<"${_projid}" ;;
 esac
 
