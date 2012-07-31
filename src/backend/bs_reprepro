@@ -21,8 +21,10 @@ distro="DISTRO"
 component="main"
 
 case "${_projid}" in
+home:*:branches:*:*:*) IFS=: read -r one two three distro codename component <<<"${_projid}" ;;
 home:*) :: ;;
 *:*:*) IFS=: read -r distro codename component <<<"${_projid}" ;;
+*) :: ;;
 esac
 
 # -- Setup reprepro Debian repository
