@@ -87,6 +87,9 @@ our $bsgroup = 'obsrun';
 # To enable package downloading from backend on demand
 our $enable_download_on_demand = 1;
 
+# To enable bugzilla hooks, which update tickets when builds are successful.
+our $enable_bugzilla_hooks = 0;
+
 # Disable fdatasync calls, increases the speed, but may lead to data 
 # corruption on system crash when the filesystem does not guarantees
 # data write before rename.
