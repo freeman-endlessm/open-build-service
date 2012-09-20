@@ -2678,6 +2678,8 @@ sub jobfinished {
     my @bugs;
     local *D;
     opendir(D, "$reporoot/$prp/$myarch/$packid/");
+    my $packageName = "";
+    my $packageVersion = "";
     while (my $file = readdir(D)) {
       if ($file =~ /\.deb$/) {
         open(DEBLIST, "dpkg-deb --fsys-tarfile $reporoot/$prp/$myarch/$packid/$file | tar -tf -|");
@@ -2685,8 +2687,25 @@ sub jobfinished {
           if (/changelog\.Debian\.gz/) {
             chomp;
             open(CHANGELOG, "dpkg-deb --fsys-tarfile $reporoot/$prp/$myarch/$packid/$file | tar -O -xvf - '$_' | gunzip | dpkg-parsechangelog -l-|");
+            my $inChanges = 0;
             while(<CHANGELOG>) {
-              push @bugs, /(\d+)/g if /BUG: *(.*)/;
+              chomp;
+              if ($inChanges) {
+                push @bugs, /(\d+)/g if /BUG: *(.*)/;
+              } else {
+                my @params = split(':', $_, 1);
+                my $tag = $params[0];
+                my $value = $params[1];
+                if ($tag eq "Source") {
+                  $packageName = $value;
+                }
+                if ($tag eq "Version") {
+                  $packageVersion = $value;
+                }
+                if ($tag eq "Changes") {
+                  $inChanges = 1;
+                }
+              }
             }
             close CHANGELOG;
           }
@@ -2702,7 +2721,7 @@ sub jobfinished {
     
     # Update bugzilla
     foreach (@bugs) {
-      update_bugzilla($_, $packid, $myarch)
+      update_bugzilla($_, $packageName.'-'.$packageVersion, $myarch)
     }
   }
 
