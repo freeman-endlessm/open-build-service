@@ -5024,6 +5024,10 @@ while(1) {
       }
 
       if ($ev->{'type'} eq 'exit' || $ev->{'type'} eq 'exitcomplete' || $ev->{'type'} eq 'dumpstate' || $ev->{'type'} eq 'restart') {
+  if (time()-$schedulerstart < 1) {
+    print "Skipping possibly stale exit event, it came <1 second after startup.\n";
+    next;
+  }
 	print "exiting...\n" if $ev->{'type'} eq 'exit';
 	print "exiting (with complete info)...\n" if $ev->{'type'} eq 'exitcomplete';
 	print "restarting...\n" if $ev->{'type'} eq 'restart';
