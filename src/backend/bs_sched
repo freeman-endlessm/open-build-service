@@ -109,9 +109,9 @@ mkdir_p($infodir) || die ("Failed to create ".$infodir);
 my $buildavg = 1200; # start not at 0, but with 20min for the average ounter
 
 sub update_bugzilla {
-  my ($bugid, $packid, $myarch) = @_;
+  my ($bugid, $packid, $myarch, $project, $repo) = @_;
   print "Updating bugzilla....";
-  my $comment = "This ticket update was triggered by a successful build on $myarch\n";
+  my $comment = "This ticket update was triggered by a successful $project build on $myarch for $repo.\n";
   $comment .= "Once this package build has been integrated into an image, it will be automatically updated again.";
   my @args = ("qa-bughandler.py", "--package", $packid, "--comment", $comment, "--config-file", "/etc/qa-bughandler.conf", $bugid);
   system(@args)
@@ -2692,6 +2692,7 @@ sub jobfinished {
             push @bugs, /(\d+)/g if /BUG: *(.*)/;
           } else {
             my ($tag, $value) = split(':', $_);
+            chomp $value;
             if ($tag eq "Source") {
               $packageName = $value;
             }
@@ -2716,7 +2717,7 @@ sub jobfinished {
     
     # Update bugzilla
     foreach (@bugs) {
-      update_bugzilla($_, $packageName.'-'.$packageVersion, $myarch)
+      update_bugzilla($_, $packageName.'-'.$packageVersion, $myarch, $projid, $repoid)
     }
   }
 
