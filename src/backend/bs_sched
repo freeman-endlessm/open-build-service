@@ -2684,14 +2684,14 @@ sub jobfinished {
       if ($file =~ /\.changes$/) {
         open(CHANGELOG, "$reporoot/$prp/$myarch/$packid/$file");
         my $inChanges = 0;
+        print "Found .changes file:\n";
         while(<CHANGELOG>) {
           chomp;
+          print $_."\n";
           if ($inChanges) {
             push @bugs, /(\d+)/g if /BUG: *(.*)/;
           } else {
-            my @params = split(':', $_, 1);
-            my $tag = $params[0];
-            my $value = $params[1];
+            my ($tag, $value) = split(':', $_);
             if ($tag eq "Source") {
               $packageName = $value;
             }
@@ -2707,6 +2707,8 @@ sub jobfinished {
       }
     }
     closedir D;
+    print "Found bugs: ";
+    print Dumper(@bugs);
 
     # Remove duplicates
     my %bughash = map { $_, 1 } @bugs;
