@@ -2671,12 +2671,12 @@ sub jobfinished {
   addjobhist($prp, $info, $status, $js, 'succeeded');
   writexml("$statusdir/.status", "$statusdir/status", $status, $BSXML::buildstatus);
 
-  if ($BSConfig::enable_bugzilla_hooks) {
+  if ($BSConfig::enable_bugzilla_hooks and $projid !~ /^home:/) {
     # Find the latest version built
     # To extract a changelog:
     # dpkg-deb --fsys-tarfile package.deb | tar -O -xvf - ./usr/share/doc/$packid/changelog.Debian.gz | gunzip | dpkg-parsechangelog -l-
-    my @bugs;
     local *D;
+    my @bugs;
     opendir(D, "$reporoot/$prp/$myarch/$packid/");
     my $packageName = "";
     my $packageVersion = "";
@@ -2689,7 +2689,7 @@ sub jobfinished {
           chomp;
           print $_."\n";
           if ($inChanges) {
-            push @bugs, /(\d+)/g if /BUG: *(.*)/;
+            push @bugs, /#(\d+)/g if /BUG: *(.*)/;
           } else {
             my ($tag, $value) = split(':', $_);
             chomp $value;
