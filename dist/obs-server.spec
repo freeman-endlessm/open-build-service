@@ -548,6 +548,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/obs/server/bs_sshgit
 /usr/lib/obs/server/bs_warden
 /usr/lib/obs/server/worker
+/usr/lib/obs/server/obs-dod-check.pl
 /usr/lib/obs/server/BSSolv.pm
 /usr/lib/obs/server/BSSolv.xs
 /usr/lib/obs/server/typemap
