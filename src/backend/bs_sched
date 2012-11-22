@@ -113,7 +113,7 @@ sub update_bugzilla {
   print "Updating bugzilla....";
   my $comment = "This ticket update was triggered by a successful $project build on $myarch for $repo.\n";
   $comment .= "Once this package build has been integrated into an image, it will be automatically updated again.";
-  my @args = ("qa-bughandler.py", "--package", $packid, "--comment", $comment, "--config-file", "/etc/qa-bughandler.conf", $bugid);
+  my @args = ("qa-bughandler.py", "--package", $packid, "--comment", $comment, "--status", "FIX_SUBMITTED", "--config-file", "/etc/qa-bughandler.conf", $bugid);
   system(@args)
 }
 
