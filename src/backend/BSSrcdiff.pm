@@ -28,6 +28,9 @@ use Fcntl;
 use strict;
 
 use BSUtil;
+use Data::Dumper;
+use File::Temp qw/ tempdir /;
+use File::Copy qw/ copy /;
 
 
 #
@@ -290,6 +293,28 @@ sub adddiffheader {
     }
   }
   return $r->{'_content'};
+}
+
+sub debdiff {
+  my ($f1, $f2, %opts) = @_;
+  my @ret;
+  my $linecount = 0;
+
+  my $diff = '';
+  local *D;
+  print "Running debdiff on $f1 and $f2\n";
+  my $pid = open(D, "debdiff $f1 $f2 |");
+  while(<D>) {
+    $linecount += 1;
+    $diff .= "$_\n";
+  }
+  close(D);
+
+  my $r = {'lines' => $linecount, 'shown' => $linecount, 'binary' => 0, '_content' => $diff};
+
+  push @ret, $r;
+
+  return @ret;
 }
 
 sub tardiff {
@@ -687,6 +712,22 @@ sub datadiff {
 	  delete $r->{'old'};
 	  delete $r->{'new'};
 	}
+      } elsif ($opts{'doarchive'} && $f =~ /\.(?:deb|dsc)$/) {
+        my $tmpdir = tempdir( CLEANUP => 1 );
+        print "Doing debdiff on $of..$f in $tmpdir\n";
+        my $filename;
+        print Dumper($old);
+        foreach $filename (keys %$old) {
+          copy("$pold/$old->{$filename}-$filename", "$tmpdir/$filename");
+        }
+        print Dumper($new);
+        foreach $filename (keys %$new) {
+          copy("$pnew/$new->{$filename}-$filename", "$tmpdir/$filename");
+        }
+        my @os = stat("$pnew/$old->{$of}-$of");
+        my @s = stat("$pnew/$new->{$f}-$f");
+        my @r = debdiff("$tmpdir/$of", "$tmpdir/$f", %opts);
+        push @changed, {'state' => 'changed', 'diff' => $r[0], 'old' => {'name' => "debdiff of $of", 'md5' => $old->{$of}, 'size' => $os[7]}, 'new' => {'name' => "debdiff of $f", 'md5' => $new->{$f}, 'size' => $s[7]}};
       } else {
 	my @os = stat("$pnew/$old->{$of}-$of");
 	my @s = stat("$pnew/$new->{$f}-$f");
