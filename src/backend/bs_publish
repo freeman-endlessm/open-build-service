@@ -1047,7 +1047,7 @@ sub publish {
       if ($bin =~ /^.+-[^-]+-[^-]+\.([a-zA-Z][^\/\.\-]*)\.d?rpm$/) {
 	$p = "$1/$bin";
       } elsif ($bin =~ /^.+_[^_]+_([^_\.]+)\.deb$/) {
-	$p = "$1/$bin";
+	$p = "$arch/$bin";
       } elsif ($bin =~ /\.d?rpm$/) {
 	# legacy format
 	my $q = Build::query("$r/$rbin", 'evra' => 1);
@@ -1056,7 +1056,7 @@ sub publish {
       } elsif ($bin =~ /\.deb$/) {
 	# legacy format
 	my $q = Build::query("$r/$rbin", 'evra' => 1);
-	$p = "$q->{'arch'}/$q->{'name'}_$q->{'version'}";
+	$p = "$arch/$q->{'name'}_$q->{'version'}";
 	$p .= "-$q->{'release'}" if defined $q->{'release'};
 	$p .= "_$q->{'arch'}.deb";
       } else {
@@ -1068,6 +1068,8 @@ sub publish {
 	  $p = "$bin";
 	} elsif ($bin =~ /\.tar\.(:?gz|bz2|xz)(:?\.sha256)?$/) {
 	  $p = "$bin";
+	} elsif ($bin =~ /\.changes(:?\.sha256)?$/) {
+	  $p = "$arch/$bin";
 	} elsif ($bin =~ /\.diff\.(:?gz)(:?\.sha256)?$/) {
 	  $p = "$bin";
 	} elsif ($bin =~ /\.dsc(:?\.sha256)?$/) {
