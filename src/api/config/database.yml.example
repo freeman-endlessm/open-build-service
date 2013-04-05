@@ -8,9 +8,9 @@
 
 production:
   adapter: mysql
-  database: api_production
-  username: root
-  password: opensuse
+  database: obsapi
+  username: obs-api
+  password: _DBC_DBPASS_
 
 development:
   adapter: mysql
