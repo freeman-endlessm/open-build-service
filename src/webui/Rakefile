@@ -14,8 +14,8 @@ rescue LoadError
   puts "delayed tasks not available"
 end
 
-begin
-  require 'ci/reporter/rake/test_unit'
-rescue LoadError
-  puts "Please run 'rake gems:install' to install the 'ci_reporter' gem."
-end
+#begin
+#  require 'ci/reporter/rake/test_unit'
+#rescue LoadError
+#  puts "Please run 'rake gems:install' to install the 'ci_reporter' gem."
+#end

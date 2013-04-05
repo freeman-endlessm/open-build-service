@@ -44,11 +44,11 @@ init = Rails::Initializer.run do |config|
 
   config.gem 'daemons'
   config.gem 'delayed_job', :version => '<3.0'
-  config.gem 'exception_notification', :version => '<= 1.1'
+#  config.gem 'exception_notification', :version => '<= 1.1'
   config.gem 'erubis'
   config.gem 'rails_xss'
   config.gem 'nokogiri'
-  config.gem 'ci_reporter', :lib => false # ci_reporter generates XML reports for Test::Unit
+#  config.gem 'ci_reporter', :lib => false # ci_reporter generates XML reports for Test::Unit
 
   # Activate observers that should always be running
   # config.active_record.observers = :cacher, :garbage_collector
@@ -75,9 +75,9 @@ ActionController::Base.relative_url_root = CONFIG['relative_url_root'] if CONFIG
 require 'ostruct'
 
 # Exception notifier plugin configuration
-ExceptionNotifier.sender_address = %("OBS Webclient" <admin@opensuse.org>)
-ExceptionNotifier.email_prefix = "[OBS web error] "
-ExceptionNotifier.exception_recipients = CONFIG['exception_recipients']
+#ExceptionNotifier.sender_address = %("OBS Webclient" <admin@opensuse.org>)
+#ExceptionNotifier.email_prefix = "[OBS web error] "
+#ExceptionNotifier.exception_recipients = CONFIG['exception_recipients']
 
 if CONFIG['hide_private_options'] == true
    HIDE_PRIVATE_OPTIONS = true

@@ -45,12 +45,12 @@ Rails::Initializer.run do |config|
   config.gem 'nokogiri'
   config.gem 'daemons'
   config.gem 'delayed_job', :version => '<3.0'
-  config.gem 'exception_notification', :version => '<=1.1'
+#  config.gem 'exception_notification', :version => '<=1.1'
   config.gem 'erubis'
   config.gem 'rails_xss'
   config.gem 'json'
-  config.gem 'ci_reporter', :lib => false # ci_reporter generates XML reports for Test::Unit
-  config.gem 'rdoc'
+#  config.gem 'ci_reporter', :lib => false # ci_reporter generates XML reports for Test::Unit
+#  config.gem 'rdoc'
 
   # default secret
   secret = "ad9712p8349zqmowiefzhiuzgfp9s8f7qp83947p98weap98dfe7"
@@ -81,8 +81,8 @@ Rails::Initializer.run do |config|
 
   # See Rails::Configuration for more options
   config.after_initialize do
-    ExceptionNotifier.exception_recipients = CONFIG["exception_recipients"]
-    ExceptionNotifier.sender_address = CONFIG["exception_sender"]
+#    ExceptionNotifier.exception_recipients = CONFIG["exception_recipients"]
+#    ExceptionNotifier.sender_address = CONFIG["exception_sender"]
   end unless Rails.env.test?
 end
 
