@@ -2,9 +2,9 @@
 
 production:
   adapter: mysql
-  database: webui_production
-  username: root
-  password: opensuse
+  database: obswebui
+  username: obs-webui
+  password: _DBC_DBPASS_
 
 development:
   adapter: sqlite3
