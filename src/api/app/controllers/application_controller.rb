@@ -595,7 +595,7 @@ class ApplicationController < ActionController::Base
       end
     else
       if send_exception_mail?
-        ExceptionNotifier.deliver_exception_notification(exception, self, strip_sensitive_data_from(request), {})
+        #ExceptionNotifier.deliver_exception_notification(exception, self, strip_sensitive_data_from(request), {})
       end
       render_error :message => "Uncaught exception: #{exception.message}", :status => 400
     end
@@ -603,7 +603,7 @@ class ApplicationController < ActionController::Base
 
   def send_exception_mail?
     return false if Rails.env.test?
-    return false unless ExceptionNotifier.exception_recipients
+    #return false unless ExceptionNotifier.exception_recipients
     return !local_request? && !Rails.env.development?
   end
 

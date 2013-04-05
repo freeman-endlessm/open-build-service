@@ -226,7 +226,7 @@ class ApplicationController < ActionController::Base
     when Timeout::Error
       render :template => "timeout" and return
     when ValidationError
-      ExceptionNotifier.deliver_exception_notification(exception, self, strip_sensitive_data_from(request), {}) if send_exception_mail?
+      #ExceptionNotifier.deliver_exception_notification(exception, self, strip_sensitive_data_from(request), {}) if send_exception_mail?
       render :template => "xml_errors", :locals => { :oldbody => exception.xml, :errors => exception.errors }, :status => 400
     when MissingParameterError 
       render_error :status => 400, :message => message
@@ -237,7 +237,7 @@ class ApplicationController < ActionController::Base
       render_error :message => "Unable to connect to API host. (#{FRONTEND_HOST})", :status => 503
     else
       if code != 404 && send_exception_mail?
-        ExceptionNotifier.deliver_exception_notification(exception, self, strip_sensitive_data_from(request), {})
+        #ExceptionNotifier.deliver_exception_notification(exception, self, strip_sensitive_data_from(request), {})
       end
       render_error :status => 400, :code => code, :message => message,
         :exception => exception, :api_exception => api_exception
@@ -295,7 +295,7 @@ class ApplicationController < ActionController::Base
   end
 
   def send_exception_mail?
-    return !local_request? && !Rails.env.development? && ExceptionNotifier.exception_recipients && ExceptionNotifier.exception_recipients.length > 0
+    return !local_request? && !Rails.env.development? # && ExceptionNotifier.exception_recipients && ExceptionNotifier.exception_recipients.length > 0
   end
 
   def instantiate_controller_and_action_names

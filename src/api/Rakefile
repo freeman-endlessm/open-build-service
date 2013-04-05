@@ -17,8 +17,8 @@ end
 require 'workers/update_issues.rb'
 task(:updateissues => :environment) { Delayed::Job.enqueue UpdateIssuesJob.new }
 
-begin
-  require 'ci/reporter/rake/test_unit'
-rescue LoadError
-  puts "Please run 'rake gems:install' to install the 'ci_reporter' gem."
-end
+#begin
+#  require 'ci/reporter/rake/test_unit'
+#rescue LoadError
+#  puts "Please run 'rake gems:install' to install the 'ci_reporter' gem."
+#end
