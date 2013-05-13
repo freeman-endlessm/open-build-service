@@ -2689,7 +2689,7 @@ sub jobfinished {
           chomp;
           print $_."\n";
           if ($inChanges) {
-            push @bugs, /#(\d+)/g if /BUG: *(.*)/;
+            push @bugs, /#(\d+)/g if /$BSConfig::bugprefix: *(.*)/;
           } else {
             my ($tag, $value) = split(':', $_);
             chomp $value;
