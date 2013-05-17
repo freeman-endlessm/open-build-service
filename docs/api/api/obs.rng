@@ -17,6 +17,7 @@
       <value>armv7l</value>
       <value>armv5el</value> <!-- not existing officially -->
       <value>armv6el</value>
+      <value>armv6hl</value>
       <value>armv7el</value>
       <value>armv7hl</value>
       <value>armv8el</value>

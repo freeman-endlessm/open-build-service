@@ -31,10 +31,10 @@ package BSCando;
 #FIXME 3.0: obsolete the not exiting arm architectures
 
 our %cando = (
-  'armv4l'  => [ 'armv4l'                                                                                      ],
-  'armv5l'  => [ 'armv4l', 'armv5l'                    , 'armv5el'                                             ],
-  'armv6l'  => [ 'armv4l', 'armv5l', 'armv6l'          , 'armv5el', 'armv6el'                                  ],
-  'armv7l'  => [ 'armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el', 'armv6el', 'armv7el', 'armv7hl', 'armv8el' ],
+  'armv4l'  => [ 'armv4l'                                                                                                 ],
+  'armv5l'  => [ 'armv4l', 'armv5l'                    , 'armv5el'                                                        ],
+  'armv6l'  => [ 'armv4l', 'armv5l', 'armv6l'          , 'armv5el', 'armv6el', 'armv6hl'                                  ],
+  'armv7l'  => [ 'armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el', 'armv6el', 'armv6hl', 'armv7el', 'armv7hl', 'armv8el' ],
 
   'sh4'     => [ 'sh4' ],
 

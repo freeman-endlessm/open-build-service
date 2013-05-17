@@ -11,6 +11,7 @@ sub parse {
 	'armv5l'  => ['arm', 'armel', 'armv5el',                        'noarch'],
 	'armv7l'  => ['arm', 'armel', 'armv5el', 'armv7el',             'noarch'],
 	'armv5el' => ['arm', 'armel', 'armv5el',                        'noarch'],
+	'armv6hl' => ['armhf', 'armv6hl', 'armv6nhl',                   'noarch'],
 	'armv7el' => ['arm', 'armel', 'armv5el', 'armv7el',             'noarch'],
 	'armv7hl' => ['armhf', 'armv7hl', 'armv7nhl',                   'noarch'],
 	'ppc'     => ['ppc',                                            'noarch'],
