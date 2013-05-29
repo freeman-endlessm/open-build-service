@@ -862,7 +862,7 @@ module UserMixins
 
             # This method returns an array which contains all valid hash types.
             def self.default_password_hash_types
-              [ 'md5' ]
+              [ 'md5', 'md5crypt' ]
             end
 
             # Hashes the given parameter by the selected hashing method. It uses the
@@ -870,6 +870,7 @@ module UserMixins
             def hash_string(value)
               return case password_hash_type
                      when 'md5' then Digest::MD5.hexdigest(value + self.password_salt)
+                     when 'md5crypt' then value.crypt("$1$" + self.password_salt + "$").split("$")[3]
                      end
             end 
 
