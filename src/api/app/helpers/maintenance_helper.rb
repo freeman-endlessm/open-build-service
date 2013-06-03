@@ -746,6 +746,13 @@ module MaintenanceHelper
       DbProject.transaction do
         tprj = DbProject.new :name => target_project, :title => title, :description => description
         tprj.add_user @http_user, "maintainer"
+        # If it's a hidden project, add all users from original project as readers so they can accept submissions
+        # from this new branch project
+        if DbProject.is_hidden?(prj.name)
+          prj.each_user do |u|
+            tprj.add_user u, "reader"
+          end
+        end
         tprj.flags.create( :flag => 'build', :status => "disable" ) if extend_names
         tprj.flags.create( :flag => 'access', :status => "disable" ) if noaccess
         tprj.store
