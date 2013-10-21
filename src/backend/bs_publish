@@ -529,7 +529,7 @@ sub updaterepo_reprepro {
           '--ignore=wrongdistribution',
           '--ignore=updatedarchall',
           '--ignore=unusedarch',
-          '-T', 'deb',
+          '-T', 'deb|udeb',
           '-C', $component,
           'include', $codename,
           "$extrep/$f");
@@ -1066,7 +1066,7 @@ sub publish {
       my $p;
       if ($bin =~ /^.+-[^-]+-[^-]+\.([a-zA-Z][^\/\.\-]*)\.d?rpm$/) {
 	$p = "$1/$bin";
-      } elsif ($bin =~ /^.+_[^_]+_([^_\.]+)\.deb$/) {
+      } elsif ($bin =~ /^.+_[^_]+_([^_\.]+)\.u+deb$/) {
 	$p = "$arch/$bin";
       } elsif ($bin =~ /\.d?rpm$/) {
 	# legacy format
