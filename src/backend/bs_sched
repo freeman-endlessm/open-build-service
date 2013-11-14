@@ -6280,7 +6280,8 @@ relsynccheck:
   }
 
   # we always publish kiwi...
-  if (!%unfinished || $prptype eq 'kiwi') {
+  # Also always publish if a repository is configured to never block
+  if (!%unfinished || $prptype eq 'kiwi' || ($repo->{'block'} && $repo->{'block'} eq 'never')) {
     my $pubenabled = enabled($repoid, $projpacks->{$projid}->{'publish'}, 1);
     my %pubenabled;
     for my $packid (@packs) {
