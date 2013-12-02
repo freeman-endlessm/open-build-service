@@ -529,10 +529,21 @@ sub updaterepo_reprepro {
           '--ignore=wrongdistribution',
           '--ignore=updatedarchall',
           '--ignore=unusedarch',
-          '-T', 'deb|udeb',
+          '-T', 'deb',
           '-C', $component,
           'include', $codename,
           "$extrep/$f");
+        if (qsystem ('grep', '-q', '^Package-Type:.*',
+            "$extrep/$f") == 0) {
+          qsystem ('reprepro', '-b', $repo,
+            '--ignore=wrongdistribution',
+            '--ignore=updatedarchall',
+            '--ignore=unusedarch',
+            '-T', 'udeb',
+            '-C', $component,
+            'include', $codename,
+            "$extrep/$f");
+         }
       } elsif ($f =~ /\.dsc/) {
         print " Updated dsc file => $f\n" ;
         qsystem ('reprepro', '-b', $repo,
