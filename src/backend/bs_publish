@@ -525,25 +525,46 @@ sub updaterepo_reprepro {
   for my $f (@changed) {
       if ($f =~ /\.changes/) {
         print " Updated changes file => $f\n" ;
-        qsystem ('reprepro', '-b', $repo,
-          '--ignore=wrongdistribution',
-          '--ignore=updatedarchall',
-          '--ignore=unusedarch',
-          '-T', 'deb',
-          '-C', $component,
-          'include', $codename,
-          "$extrep/$f");
-        if (qsystem ('grep', '-q', '^Package-Type:.*',
-            "$extrep/$f") == 0) {
+
+        my %types;
+        if (open (my $fh, '<', "$extrep/$f")) {
+          # Read the .changes file looking for binary packages
+          # (.deb, .udeb, .ddeb)
+          my $in_files = 0;
+          while (my $line = <$fh>) {
+            if ($in_files) {
+              if ($line =~ /^\s/) {
+                if ($line =~ /\.((?:|u|d)deb)$/) {
+                  $types{$1} = 1;
+                }
+              } else {
+                $in_files = 0;
+              }
+            } elsif ($line =~ /^Files\s*:/) {
+              $in_files = 1;
+            }
+          }
+        } else {
+          print "    unable to open $extrep/$f: $!\n";
+        }
+
+        if (!%types) {
+          # no binary packages at all? assume we must have mis-parsed it,
+          # and run reprepro for the .deb files so we get a better
+          # error report
+          %types = (deb => 1);
+        }
+
+        foreach my $type (keys %types) {
           qsystem ('reprepro', '-b', $repo,
             '--ignore=wrongdistribution',
             '--ignore=updatedarchall',
             '--ignore=unusedarch',
-            '-T', 'udeb',
+            '-T', $type,
             '-C', $component,
             'include', $codename,
             "$extrep/$f");
-         }
+        }
       } elsif ($f =~ /\.dsc/) {
         print " Updated dsc file => $f\n" ;
         qsystem ('reprepro', '-b', $repo,
