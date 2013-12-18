@@ -557,8 +557,10 @@ sub updaterepo_reprepro {
 
         foreach my $type (keys %types) {
           qsystem ('reprepro', '-b', $repo,
+            '--ignore=ignore',
             '--ignore=wrongdistribution',
             '--ignore=updatedarchall',
+            '--ignore=conflictingarchall',
             '--ignore=unusedarch',
             '-T', $type,
             '-C', $component,
