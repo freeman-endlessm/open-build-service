@@ -114,7 +114,7 @@ sub fillpkgdescription {
       $hit = $p;
       last;
     }
-    if ($pn =~ /^\Q$name\E_([^_]+)_[^_]+\.deb$/) {
+    if ($pn =~ /^\Q$name\E_([^_]+)_[^_]+\.(?:|u|d)deb$/) {
       $hit = $p;
       last;
     }
@@ -223,7 +223,7 @@ sub updatebinaryindex {
     my $n;
     if ($key =~ /(?:^|\/)([^\/]+)-[^-]+-[^-]+\.[a-zA-Z][^\/\.\-]*\.rpm$/) {
       $n = $1;
-    } elsif ($key =~ /(?:^|\/)([^\/]+)_([^\/]*)_[^\/]*\.deb$/) {
+    } elsif ($key =~ /(?:^|\/)([^\/]+)_([^\/]*)_[^\/]*\.(?:|u|d)deb$/) {
       $n = $1;
     } else {
       next;
@@ -235,7 +235,7 @@ sub updatebinaryindex {
     my $n;
     if ($key =~ /(?:^|\/)([^\/]+)-[^-]+-[^-]+\.[a-zA-Z][^\/\.\-]*\.rpm$/) {
       $n = $1;
-    } elsif ($key =~ /(?:^|\/)([^\/]+)_([^\/]*)_[^\/]*\.deb$/) {
+    } elsif ($key =~ /(?:^|\/)([^\/]+)_([^\/]*)_[^\/]*\.(?:|u|d)deb$/) {
       $n = $1;
     } else {
       next;
@@ -916,7 +916,7 @@ sub deleterepo {
       } else {
         unlink("$r/$bin") || die("unlink $r/$bin: $!\n");
       }
-      push @db_deleted, $p if $p =~ /\.(?:rpm|deb)$/;
+      push @db_deleted, $p if $p =~ /\.(?:rpm|(?:|u|d)deb)$/;
     }
   }
   # update repoinfo
@@ -953,7 +953,7 @@ sub deleterepo {
     print "    running rsync to $1 at ".localtime(time)."\n";
     # rsync with a timeout of 1 hour
     # sync first just the binaries without deletion of the old ones, afterwards the rest(esp. meta data) and cleanup
-    qsystem('echo', "$projid_ext\0", 'rsync', '-ar0', '--include=*.rpm', '--include=*.deb', '--include=*/', '--exclude=*', '--timeout', '7200', '--files-from=-', $extrepodir, "$1::$2") && die("    rsync failed at ".localtime(time).": $?\n");
+    qsystem('echo', "$projid_ext\0", 'rsync', '-ar0', '--include=*.rpm', '--include=*.deb', '--include=*.udeb', '--include=*.ddeb', '--include=*/', '--exclude=*', '--timeout', '7200', '--files-from=-', $extrepodir, "$1::$2") && die("    rsync failed at ".localtime(time).": $?\n");
     qsystem('echo', "$projid_ext\0", 'rsync', '-ar0', '--delete-after', '--exclude=repocache', '--delete-excluded', '--timeout', '7200', '--files-from=-', $extrepodir, "$1::$2") && die("    rsync failed at ".localtime(time).": $?\n");
   }
   # push done trigger sync to other mirrors
@@ -1096,11 +1096,11 @@ sub publish {
 	}
       }
       $bin =~ s/^.*?:://;	# strip package name for now
-      #next unless $bin =~ /\.(?:rpm|deb)$/;
+      #next unless $bin =~ /\.(?:rpm|(?:|u|d)deb)$/;
       my $p;
       if ($bin =~ /^.+-[^-]+-[^-]+\.([a-zA-Z][^\/\.\-]*)\.d?rpm$/) {
 	$p = "$1/$bin";
-      } elsif ($bin =~ /^.+_[^_]+_([^_\.]+)\.u+deb$/) {
+      } elsif ($bin =~ /^.+_[^_]+_([^_\.]+)\.(?:|u|d)deb$/) {
 	$p = "$arch/$bin";
       } elsif ($bin =~ /\.d?rpm$/) {
 	# legacy format
@@ -1238,7 +1238,7 @@ sub publish {
       if (!exists($bins{$p})) {
 	print "      - $p\n";
         unlink("$r/$bin") || die("unlink $r/$bin: $!\n");
-        push @db_deleted, $p if $p =~ /\.(?:rpm|deb)$/;
+        push @db_deleted, $p if $p =~ /\.(?:rpm|(?:|u|d)deb)$/;
         $changed = 1;
 	push @deleted, $p;
 	next;
@@ -1246,7 +1246,7 @@ sub publish {
       if ("$s[9]/$s[7]/$s[1]" ne $bins_id{$p}) {
         unlink("$r/$bin") || die("unlink $r/$bin: $!\n");
         link($bins{$p}, "$r/$bin") || die("link $bins{$p} $r/$bin: $!\n");
-	push @db_changed, $p if $p =~ /\.(?:rpm|deb)$/;
+	push @db_changed, $p if $p =~ /\.(?:rpm|(?:|u|d)deb)$/;
 	push @changed, $p;
         $changed = 1;
       }
@@ -1266,7 +1266,7 @@ sub publish {
 	} else {
 	  unlink("$r/$bin") || die("unlink $r/$bin: $!\n");
 	}
-	push @db_deleted, $p if $p =~ /\.(?:rpm|deb)$/;
+	push @db_deleted, $p if $p =~ /\.(?:rpm|(?:|u|d)deb)$/;
         $changed = 1;
 	next;
       }
@@ -1295,7 +1295,7 @@ sub publish {
 	} else {
           link($bins{$p}, "$r/$bin") || die("link $bins{$p} $r/$bin: $!\n");
 	}
-	push @db_changed, $p if $p =~ /\.(?:rpm|deb)$/;
+	push @db_changed, $p if $p =~ /\.(?:rpm|(?:|u|d)deb)$/;
 	push @changed, $p;
         $changed = 1;
       }
@@ -1319,7 +1319,7 @@ sub publish {
     } else {
       link($bins{$p}, "$r/$bin") || die("link $bins{$p} $r/$bin: $!\n");
     }
-    push @db_changed, $p if $p =~ /\.(?:rpm|deb)$/;
+    push @db_changed, $p if $p =~ /\.(?:rpm|(?:|u|d)deb)$/;
     push @changed, $p;
     $changed = 1;
   }
