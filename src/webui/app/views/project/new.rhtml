@@ -6,8 +6,7 @@
 <% if not @user.is_admin? %>
   <p>
     All users have a <b>home:&lt;login&gt;</b> project by default, and can also create new sub projects. New project outside of your home namespace can get requested via
-    <a href="https://bugzilla.novell.com/enter_bug.cgi?classification=7340&amp;product=openSUSE.org&amp;submit=Use+This+Product&amp;component=OBS%20Request">bugzilla</a>.
-    To discuss the requested project setup, please use the <a href="mailto:opensuse-buildservice@opensuse.org">opensuse-buildservice@opensuse.org</a> mailing list.
+    <a href="https://bugs.collabora.co.uk/enter_bug.cgi?product=Build%20services">bugzilla</a>.
   </p>
 <% end %>
 
@@ -29,7 +28,7 @@
     <label for="description"><b>Description:</b></label><br/>
     <%= text_area_tag 'description', @project_description, :cols => 80, :rows => 10 %><br/>
     <% unless HIDE_PRIVATE_OPTIONS == true %>
-      <%= check_box_tag :access_protection, false %>Hide the entire project.<br/>
+      <%= check_box_tag :access_protection, false %>Hide the entire project. <strong>Check this for all client projects.</strong><br/>
       <%= check_box_tag :source_protection, false %>Deny access to sources of project.<br/>
     <% end %>
     <%= check_box_tag :disable_publishing, false %>Disable build results publishing.<br/>
