@@ -109,11 +109,11 @@ mkdir_p($infodir) || die ("Failed to create ".$infodir);
 my $buildavg = 1200; # start not at 0, but with 20min for the average ounter
 
 sub update_bugzilla {
-  my ($bugid, $packid, $myarch, $project, $repo) = @_;
+  my ($bugid, $packid, $myarch, $project, $repo, $bzconfig) = @_;
   print "Updating bugzilla....";
   my $comment = "This ticket update was triggered by a successful $project build on $myarch for $repo.\n";
   $comment .= "Once this package build has been integrated into an image, it will be automatically updated again.";
-  my @args = ("qa-bughandler.py", "--package", $packid, "--comment", $comment, "--status", "FIX_SUBMITTED", "--config-file", "/etc/qa-bughandler.conf", $bugid);
+  my @args = ("qa-bughandler.py", "--package", $packid, "--comment", $comment, "--status", "FIX_SUBMITTED", "--config-file", "/etc/qa-bughandler/$bzconfig", $bugid);
   system(@args)
 }
 
@@ -2671,53 +2671,55 @@ sub jobfinished {
   addjobhist($prp, $info, $status, $js, 'succeeded');
   writexml("$statusdir/.status", "$statusdir/status", $status, $BSXML::buildstatus);
 
-  if ($BSConfig::enable_bugzilla_hooks and $projid !~ /^home:/) {
-    # Find the latest version built
-    # To extract a changelog:
-    # dpkg-deb --fsys-tarfile package.deb | tar -O -xvf - ./usr/share/doc/$packid/changelog.Debian.gz | gunzip | dpkg-parsechangelog -l-
-    local *D;
-    my @bugs;
-    opendir(D, "$reporoot/$prp/$myarch/$packid/");
-    my $packageName = "";
-    my $packageVersion = "";
-    while (my $file = readdir(D)) {
-      if ($file =~ /\.changes$/) {
-        open(CHANGELOG, "$reporoot/$prp/$myarch/$packid/$file");
-        my $inChanges = 0;
-        print "Found .changes file:\n";
-        while(<CHANGELOG>) {
-          chomp;
-          print $_."\n";
-          if ($inChanges) {
-            push @bugs, /#(\d+)/g if /$BSConfig::bugprefix: *(.*)/;
-          } else {
-            my ($tag, $value) = split(':', $_);
-            chomp $value;
-            if ($tag eq "Source") {
-              $packageName = $value;
-            }
-            if ($tag eq "Version") {
-              $packageVersion = $value;
-            }
-            if ($tag eq "Changes") {
-              $inChanges = 1;
+  while( my ($k, $v) = each %$BSConfig::bugzilla_prefix ) {
+    if ($prp ~ /^$k/) {
+      # Find the latest version built
+      # To extract a changelog:
+      # dpkg-deb --fsys-tarfile package.deb | tar -O -xvf - ./usr/share/doc/$packid/changelog.Debian.gz | gunzip | dpkg-parsechangelog -l-
+      local *D;
+      my @bugs;
+      opendir(D, "$reporoot/$prp/$myarch/$packid/");
+      my $packageName = "";
+      my $packageVersion = "";
+      while (my $file = readdir(D)) {
+        if ($file =~ /\.changes$/) {
+          open(CHANGELOG, "$reporoot/$prp/$myarch/$packid/$file");
+          my $inChanges = 0;
+          print "Found .changes file:\n";
+          while(<CHANGELOG>) {
+            chomp;
+            print $_."\n";
+            if ($inChanges) {
+              push @bugs, /#(\d+)/g if /$v->{'bzprefix'}: *(.*)/;
+            } else {
+              my ($tag, $value) = split(':', $_);
+              chomp $value;
+              if ($tag eq "Source") {
+                $packageName = $value;
+              }
+              if ($tag eq "Version") {
+                $packageVersion = $value;
+              }
+              if ($tag eq "Changes") {
+                $inChanges = 1;
+              }
             }
           }
+          close CHANGELOG;
         }
-        close CHANGELOG;
       }
-    }
-    closedir D;
-    print "Found bugs: ";
-    print Dumper(@bugs);
+      closedir D;
+      print "Found bugs: ";
+      print Dumper(@bugs);
 
-    # Remove duplicates
-    my %bughash = map { $_, 1 } @bugs;
-    @bugs = keys %bughash;
+      # Remove duplicates
+      my %bughash = map { $_, 1 } @bugs;
+      @bugs = keys %bughash;
     
-    # Update bugzilla
-    foreach (@bugs) {
-      update_bugzilla($_, $packageName.'-'.$packageVersion, $myarch, $projid, $repoid)
+      # Update bugzilla
+      foreach (@bugs) {
+        update_bugzilla($_, $packageName.'-'.$packageVersion, $myarch, $projid, $repoid, $v->{'bzconfig'})
+      }
     }
   }
 

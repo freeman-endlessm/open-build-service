@@ -88,8 +88,17 @@ our $bsgroup = 'obsrun';
 our $enable_download_on_demand = 1;
 
 # To enable bugzilla hooks, which update tickets when builds are successful.
+# 0 .. hook disabled
+# 1 .. hook enabled
+# When a bugprefix is mapped in, system qa-bughandler is invoked reading the
+# configuration file at /etc/qa-bughandler/$bzconfig
 our $enable_bugzilla_hooks = 0;
-our $bugprefix = 'BUG';
+#our $bugzilla_prefix = {
+#  "exampledistro:examplesuite:examplecomponent/examplerepository" => {
+#    "bzprefix" => "BUG",
+#    "bzconfig" => "bug",
+#  },
+#};
 
 # Disable fdatasync calls, increases the speed, but may lead to data 
 # corruption on system crash when the filesystem does not guarantees
