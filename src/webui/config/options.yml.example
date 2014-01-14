@@ -2,9 +2,11 @@
 version: 1.0
 
 # change this option to use a customized theme. See README.theme
-theme: neutral
+#theme: neutral
 # this is build.opensuse.org's theme
 #theme: bento
+# this is build.collabora.co.uk's theme
+theme: collabora
 
 # Set this when the webclient runs from a subdirectory
 #relative_url_root: /stage
