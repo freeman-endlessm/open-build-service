@@ -2672,7 +2672,7 @@ sub jobfinished {
   writexml("$statusdir/.status", "$statusdir/status", $status, $BSXML::buildstatus);
 
   while( my ($k, $v) = each %$BSConfig::bugzilla_prefix ) {
-    if ($prp ~ /^$k/) {
+    if ($prp =~ /^$k/) {
       # Find the latest version built
       # To extract a changelog:
       # dpkg-deb --fsys-tarfile package.deb | tar -O -xvf - ./usr/share/doc/$packid/changelog.Debian.gz | gunzip | dpkg-parsechangelog -l-
@@ -2681,11 +2681,12 @@ sub jobfinished {
       opendir(D, "$reporoot/$prp/$myarch/$packid/");
       my $packageName = "";
       my $packageVersion = "";
+      print "   - Scanning bugs for $prp\n";
       while (my $file = readdir(D)) {
         if ($file =~ /\.changes$/) {
           open(CHANGELOG, "$reporoot/$prp/$myarch/$packid/$file");
           my $inChanges = 0;
-          print "Found .changes file:\n";
+          print "  - Found .changes file:\n";
           while(<CHANGELOG>) {
             chomp;
             print $_."\n";
