@@ -41,3 +41,8 @@ min_votes_for_rating: 3
 # If the last package in a project is cleaned up by sourceupdate=cleanup,
 # delete the whole project unless this is set to "false"
 #cleanup_empty_projects: true
+
+# When a user creates a new project as a side-effect of branching a
+# package, disable publishing that project? The default is "true" to
+# save disk space and bandwidth.
+#disable_publish_for_branches: true

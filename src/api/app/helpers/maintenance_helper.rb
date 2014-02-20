@@ -837,15 +837,22 @@ module MaintenanceHelper
           end
         end
         if add_repositories
-          # take over flags, but explicit disable publishing by default and enable building. Ommiting also lock or we can not create packages
+          # Take over flags, but enable building.
+          # By default, disable 'publish' to save space and bandwidth, but this
+          # can be turned off for small installations.
+          # Also omit 'lock' or we cannot create packages.
+          disable_publish_for_branches = (CONFIG['disable_publish_for_branches'] != false)
           p[:link_target_project].flags.each do |f|
-            unless [ "build", "publish", "lock" ].include?(f.flag)
-              unless tprj.flags.find_by_flag_and_status( f.flag, f.status, f.repo, f.architecture )
-                tprj.flags.create(:status => f.status, :flag => f.flag, :architecture => f.architecture, :repo => f.repo)
-              end
+            next if [ "build", "lock" ].include?(f.flag)
+            next if f.flag == 'publish' and disable_publish_for_branches
+
+            unless tprj.flags.find_by_flag_and_status( f.flag, f.status, f.repo, f.architecture )
+              tprj.flags.create(:status => f.status, :flag => f.flag, :architecture => f.architecture, :repo => f.repo)
             end
           end
-          tprj.flags.create(:status => "disable", :flag => 'publish') unless tprj.flags.find_by_flag_and_status( 'publish', 'disable' )
+          if disable_publish_for_branches
+            tprj.flags.create(:status => "disable", :flag => 'publish') unless tprj.flags.find_by_flag_and_status( 'publish', 'disable' )
+          end
         end
       else
         # FIXME for remote project instances
