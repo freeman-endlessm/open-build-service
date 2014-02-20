@@ -1686,7 +1686,7 @@ class RequestController < ApplicationController
         # cleanup source project
         source_project = DbProject.find_by_name(action.source.project)
         delete_path = nil
-        if source_project.db_packages.count == 1 or not action.source.has_attribute?(:package)
+        if (source_project.db_packages.count == 1 and CONFIG['cleanup_empty_projects'] != false) or not action.source.has_attribute?(:package)
           # remove source project, if this is the only package and not the user's home project
           if source_project.name != "home:" + user.login
             source_project.destroy
