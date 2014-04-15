@@ -529,6 +529,8 @@ sub updaterepo_reprepro {
           '--ignore=wrongdistribution',
           '--ignore=updatedarchall',
           '--ignore=unusedarch',
+          '--export=never',
+          '--waitforlock=60',
           '-T', 'deb',
           '-C', $component,
           'include', $codename,
@@ -536,12 +538,15 @@ sub updaterepo_reprepro {
       } elsif ($f =~ /\.dsc/) {
         print " Updated dsc file => $f\n" ;
         qsystem ('reprepro', '-b', $repo,
+          '--export=never',
+          '--waitforlock=60',
           '-C', $component,
           '-P', 'standard',
           '-S', 'main',
           'includedsc', $codename, "$extrep/$f");
       }
   }
+  qsystem ('reprepro', '--waitforlock=60', '-b', $repo, 'export', $codename);
 }
 
 sub createrepo_debian {
