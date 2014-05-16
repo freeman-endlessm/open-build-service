@@ -221,6 +221,12 @@
             </element>
         </optional>
         <zeroOrMore>
+          <element name="buildenv">
+            <attribute name="name"><data type="string"/></attribute>
+            <text/>
+          </element>
+        </zeroOrMore>
+        <zeroOrMore>
             <element name="path">
               <attribute name="repository">
                 <data type="string" />

@@ -43,6 +43,9 @@ use strict;
 #       [ $repo ],         refers to the repository construct and allows again any number of them (0-X)
 #];                        closes the <package> child with </package>
 
+
+our $buildenv = [ buildenv => 'name', [], '_content' ];
+
 our $repo = [
    'repository' => 
 	'name',
@@ -58,6 +61,7 @@ our $repo = [
 	    'project',
 	    'repository',
      ]],
+     [ $buildenv ],
       [ 'arch' ],
 	'status',
 ];

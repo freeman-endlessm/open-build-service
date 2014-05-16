@@ -743,6 +743,19 @@ class DbProject < ActiveRecord::Base
 
         was_updated = true if current_repo.architectures.size > 0 or repo.each_arch.size > 0
 
+        new_size = repo.each_buildenv.size
+        old_size = current_repo.buildenvs.size
+
+        if new_size > 0 or old_size > 0
+          was_updated = true
+          current_repo.buildenvs.each do |bev|
+            bev.destroy
+          end
+          repo.each_buildenv do |bev|
+            current_repo.buildenvs.create :name => bev.name, :value => bev.text
+          end
+        end
+
         if was_updated
           current_repo.save!
           self.updated_at = Time.now
@@ -1102,6 +1115,9 @@ class DbProject < ActiveRecord::Base
               project_name = pe.link.db_project.name
             end
             r.path( :project => project_name, :repository => pe.link.name )
+          end
+          repo.buildenvs.each do |bev|
+            r.buildenv(:name => bev.name){ r.text(bev.value) }
           end
           repo.architectures.each do |arch|
             r.arch arch.name
