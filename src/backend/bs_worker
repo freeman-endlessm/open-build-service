@@ -1424,6 +1424,43 @@ sub patchkiwi {
   writexml($kiwifile, undef, $kiwi, $BSKiwiXML::kiwidesc);
 }
 
+sub write_repo_config ($$)
+{
+  my $xml = XML::Structured::XMLin( $BSXML::proj, $_[0] );
+  my $rid = $_[1];
+  my $repos = ( $xml && $xml->{repository} );
+  my $env = "$buildroot/.repo-env.sh";
+  my $done = 0;
+
+  $repos || return $done;
+
+  foreach my $r (grep { $_->{name} eq $rid } @$repos)
+  {
+    my $envars = $r->{ buildenv } || [];
+    my @envsh  = ("repoid=$rid;", "export repoid;");
+
+    foreach my $var ( @$envars )
+    {
+      my $n = $var->{ name     };
+      my $v = $var->{ _content };
+
+      # sanitise the name: alphanumeric_ only, must start with alpha_:
+      $n =~ s|[^A-Z0-9_]||ig;
+      $n =~ s|^([^A-Z_])|_$1|i;
+
+      # sanitise value: escape metacharacters + LF (but not \') and quote:
+      $v =~ s/([;<>\*\|`&\$!#\(\)\[\]\{\}:"\n\\])/\\$1/g;
+      push( @envsh, qq@$n="$v";@, "export $n;" );
+    }
+
+    writestr($env, undef, join("\n", @envsh, ''));
+    $done++;
+    last;
+  }
+
+  return $done;
+}
+
 sub dobuild {
   my ($buildinfo) = @_;
 
@@ -1493,7 +1530,12 @@ sub dobuild {
   }
   my $server = $buildinfo->{'srcserver'} || $srcserver;
   my $config = BSRPC::rpc("$server/getconfig", undef, "project=$projid", "repository=$repoid", @configpath);
+  my $prjxml = BSRPC::rpc("$server/source/$projid/_meta", undef);
+
   writestr("$buildroot/.build.config", undef, $config);
+  writestr("$buildroot/.project.xml",  undef, $prjxml);
+  writestr("$buildroot/.repo",         undef, $repoid);
+  write_repo_config($prjxml, $repoid);
 
   my $release = $buildinfo->{'release'};
   my $obsinstance = $BSConfig::obsname || '';
