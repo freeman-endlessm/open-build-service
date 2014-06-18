@@ -463,6 +463,7 @@ our $buildinfo = [
 	'versrel',
 	'bcnt',
 	'release',
+	'profile',
 	'debuginfo',
       [ 'subpack' ],
       [ 'imagetype' ],

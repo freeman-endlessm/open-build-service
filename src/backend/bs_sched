@@ -718,6 +718,7 @@ sub set_building {
     $binfo->{'release'} =~ s/\<CI_CNT\>/$release/g;
     $binfo->{'release'} =~ s/\<B_CNT\>/$bcnt/g;
   }
+  $binfo->{'profile'} = $bconf->{'profile'} if defined $bconf->{'profile'};
   my $debuginfo = $bconf->{'debuginfo'};
   $debuginfo = enabled($repoid, $projpacks->{$projid}->{'debuginfo'}, $debuginfo);
   $debuginfo = enabled($repoid, $pdata->{'debuginfo'}, $debuginfo);

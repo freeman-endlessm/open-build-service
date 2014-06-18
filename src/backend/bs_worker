@@ -1496,6 +1496,7 @@ sub dobuild {
   writestr("$buildroot/.build.config", undef, $config);
 
   my $release = $buildinfo->{'release'};
+  my $profile = $buildinfo->{'profile'};
   my $obsinstance = $BSConfig::obsname || '';
   my $disturl = "obs://$obsinstance/$projid/$repoid/$buildinfo->{'srcmd5'}-$packid";
 
@@ -1566,6 +1567,7 @@ sub dobuild {
   push @args, '--rpmlist', "$buildroot/.build.rpmlist";
   push @args, '--logfile', "$buildroot/.build.log";
   push @args, '--release', "$release" if defined $release;
+  push @args, '--profile', "$profile" if defined $profile;
   push @args, '--debug' if $buildinfo->{'debuginfo'};
   push @args, '--arch', $arch;
   push @args, '--jobs', $jobs if $jobs;
