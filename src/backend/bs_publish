@@ -538,6 +538,7 @@ sub updaterepo_reprepro {
       } elsif ($f =~ /\.dsc/) {
         print " Updated dsc file => $f\n" ;
         qsystem ('reprepro', '-b', $repo,
+          '--ignore=updatedsource',
           '--export=never',
           '--waitforlock=60',
           '-C', $component,
