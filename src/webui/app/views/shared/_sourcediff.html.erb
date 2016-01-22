@@ -1,3 +1,8 @@
+<% content_for :content_for_head do %>
+  <%= stylesheet_link_tag 'jquery.autocomplete' %>
+  <%= stylesheet_link_tag 'cm2/suse' %>
+<% end %>
+
 <% content_for :head_javascript do %>
   function collapse_expand(file_id) {
     if ($('#diff_view_' + file_id + '_placeholder').length == 1) {
@@ -25,6 +30,8 @@
     }
   }
 <% end %>
+
+<%= javascript_include_tag 'jquery.autocomplete.pack', 'jquery.expander.min' %>
 
 <% editor_width ||= 'auto' %>
 <% css_class ||= nil %>
