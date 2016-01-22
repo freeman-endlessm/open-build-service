@@ -37,6 +37,7 @@ use Data::Dumper;
 use Storable ();
 use Symbol;
 use MIME::Base64 ();
+use File::Temp qw/ tempdir /;
 
 use BSConfig;
 use BSRPC ':https';
@@ -3980,7 +3981,7 @@ sub sourcediff {
     BSServer::reply_file(\*F, $view eq 'xml' ? 'Content-Type: text/xml' : 'Content-Type: text/plain');
     return undef;
   }
-  my $tmpdir = "$uploaddir/srcdiff$$";
+  my $tmpdir = tempdir('srcdiffXXXXXX', TMPDIR => 1, CLEANUP => 1);
   my $d;
   if ($view eq 'xml') {
     my %opts = ('edir' => $tmpdir, 'similar' => 1, 'doarchive' => 1, 'fmax' => $fmax, 'tmax' => $tmax);
