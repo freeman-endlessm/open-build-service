@@ -298,6 +298,15 @@ sub tardiff {
   my $max = $opts{'tmax'};
   my $edir = $opts{'edir'};
 
+  # If either tarball is bigger than 50 MB, don't bother
+  my $tarmaxsize = 50 * 2 ** 20;
+  for my $f ($f1, $f2) {
+    my $fsize = (stat($f))[7];
+    if ($fsize > $tarmaxsize) {
+      return {'lines' => 0, 'shown' => 0};
+    }
+  }
+
   my @l1 = listtar($f1);
   my @l2 = listtar($f2);
 
