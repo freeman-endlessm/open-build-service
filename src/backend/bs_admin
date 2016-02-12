@@ -129,6 +129,11 @@ Note: the --update-*-db calls are usually only needed when corrupt data has been
    --debug for debug output
    --dry-run to test removal
 
+ --purge-project <project> [--debug] [--dry-run]
+   Purge a deleted project and any sources unreferenced by other projects.
+   --debug for debug output
+   --dry-run to test removal
+
 Debug Options
 =============
 
@@ -1011,6 +1016,220 @@ while (@ARGV) {
       }
       # some checking needed to reread everything?
       printf "\nDeleted %d files, Freed  %.3f KB.\n", $deleted, $deletedbytes/1024;
+    }
+  } elsif ($arg eq "--purge-project" ) {
+    die("ERROR: need project as argument!\n") if @ARGV < 1;
+    my $project = shift @ARGV;
+    my $debug = 0;
+    my $dryrun = 0;
+    while (@ARGV) {
+      my $opt = shift @ARGV;
+      if ($opt eq "--debug") {
+        $debug = 1;
+      } elsif ($opt eq "--dry-run") {
+        $dryrun = 1;
+      } else {
+        die("ERROR: unrecognized option $opt\n");
+      }
+    }
+
+    my %keephashes;
+    my %deletehashes;
+    my %treesfiles;
+
+    # make sure this is a deleted project
+    my $purgeprjdir = "$projectsdir/_deleted/$project.pkg";
+    die("ERROR: project $project does not seem to be deleted!\n") if ! -d $purgeprjdir;
+
+    # collect source file hashes to keep and delete
+    my @projectdirs;
+    opendir(D, $projectsdir) || die($!);
+    foreach my $prjdir (readdir(D)) {
+      next if $prjdir =~ /^\.{1,2}$/;
+      next if ! -d "$projectsdir/$prjdir";
+      next if $prjdir eq "_deleted";
+      push @projectdirs, "$projectsdir/$prjdir";
+    }
+    closedir(D);
+    opendir(D, "$projectsdir/_deleted");
+    foreach my $prjdir (readdir(D)) {
+      next if $prjdir =~ /^\.{1,2}$/;
+      next if ! -d "$projectsdir/_deleted/$prjdir";
+      push @projectdirs, "$projectsdir/_deleted/$prjdir";
+    }
+    closedir(D);
+
+    foreach my $prjdir (@projectdirs) {
+      opendir(D, $prjdir) || die($!);
+      foreach my $file (readdir(D)) {
+        if ($file =~ /(.+)\.(mrev|rev)(\.del)?$/) {
+          my $revfile = "$prjdir/$file";
+          open(F, '<', $revfile) || die($!);
+          while (my $line = <F>) {
+            my $hash = (split(/\|/, $line))[2];
+            if ($prjdir eq $purgeprjdir) {
+              $deletehashes{"$1-$hash"} = undef;
+            } else {
+              $keephashes{"$1-$hash"} = undef;
+            }
+          }
+          close(F);
+        }
+      }
+      closedir(D);
+    }
+
+    if ($debug) {
+      print "all deletehashes:\n";
+      print join("\n", keys %deletehashes);
+      print "\n\nall keephashes:\n";
+      print join("\n", keys %keephashes);
+      print "\n\n";
+    }
+
+    # get all files from treesdir
+    my @treesdirs;
+    opendir(D, $treesdir) || die($!);
+    foreach my $prjdir (readdir(D)) {
+      next if $prjdir =~ /^\.{1,2}$/;
+      next if ! -d "$treesdir/$prjdir";
+      push @treesdirs, "$treesdir/$prjdir";
+    }
+    closedir(D);
+    push @treesdirs, $srcrepdir if $srcrepdir ne $treesdir;
+
+    if ($debug) {
+      print "all treesdirs:\n", join("\n", @treesdirs);
+      print "\n\n";
+    }
+
+    foreach my $dir (@treesdirs) {
+      next if ! -d $dir;
+      opendir(D, $dir) || die($!);
+      foreach my $pkg (readdir(D)) {
+        my $pkgdir = "$dir/$pkg";
+        next if ! -d $pkgdir;
+        opendir(P, $pkgdir) || die($!);
+        foreach my $file (readdir(P)) {
+          if ($file =~ /(.+)-MD5SUMS$/) {
+            $treesfiles{"$pkg-$1"} = "$pkgdir/$file";
+          }
+        }
+      }
+    }
+
+    if ($debug) {
+      print "all treesfiles:\n";
+      print join("\n", values %treesfiles);
+      print "\n\n";
+    }
+
+    # get all dir names in srcrepdir
+    # fetch all filenames in subdirectories
+    my %sourcefiles;
+    opendir(D, $srcrepdir) || die($!);
+    foreach my $dir (readdir(D)) {
+      next if $dir =~ /^\.{1,2}$/;
+      next if $dir eq ":upload";
+      if (-d "$srcrepdir/$dir") {
+        opendir(E, "$srcrepdir/$dir") || die($!);
+        foreach my $file (readdir(E)) {
+          next if $file =~ /^\.{1,2}$/;
+          $sourcefiles{"$dir/$file"} = "$srcrepdir/$dir/$file";
+        }
+        closedir(E);
+      }
+    }
+    closedir(D);
+
+    if ($debug) {
+      print "all sourcefiles:\n";
+      print join("\n", values %sourcefiles);
+      print "\n\n";
+    }
+
+    # create map of files to delete from srcrepdir
+    my %deletefiles;
+    foreach my $hash (keys %deletehashes) {
+      next if !exists $treesfiles{$hash};
+      open(F, '<', $treesfiles{$hash}) || die($!);
+      my $pkg = (split(/-/, $hash))[0];
+      while (my $line = <F>) {
+        my ($treehash, $desc) = split(/\s+/, $line);
+        $deletefiles{"$pkg/$treehash-$desc"} = undef;
+      }
+      close(F);
+    }
+
+    if ($debug) {
+      print "files to delete:\n";
+      print join("\n", keys %deletefiles);
+      print "\n\n";
+    }
+
+    # create map of files to keep in srcrepdir
+    my %keepfiles;
+    foreach my $hash (keys %keephashes) {
+      next if !exists $treesfiles{$hash};
+      open(F, '<', $treesfiles{$hash}) || die($!);
+      my $pkg = (split(/-/, $hash))[0];
+      while (my $line = <F>) {
+        my ($treehash, $desc) = split(/\s+/, $line);
+        $keepfiles{"$pkg/$treehash-$desc"} = undef;
+      }
+      close(F);
+    }
+
+    if ($debug) {
+      print "files to keep:\n";
+      print join("\n", keys %keepfiles);
+      print "\n\n";
+    }
+
+    # prune keepfiles from deletefiles
+    foreach my $hash (keys %keepfiles) {
+      delete $deletefiles{$hash};
+    }
+
+    if ($debug) {
+      print "files to delete after pruning kept files:\n";
+      print join("\n", keys %deletefiles);
+      print "\n\n";
+    }
+
+    if (scalar(keys %deletefiles) == 0) {
+      print "nothing to delete\n";
+    } else {
+      my $deleted = 0;
+      my $deletedbytes = 0;
+      my $dr = 0; # delete result
+      # delete files!
+      print "starting deletion process: \n" if $debug;
+      while (my ($f, $path) = each %sourcefiles) {
+        print "\nfile:\t$path" if $debug;
+        next if ! exists $deletefiles{$f};
+        if (-e $path) {
+          $deletedbytes = $deletedbytes + (stat($path))[7];
+          if ($dryrun) {
+            $dr = 1;
+          } else {
+            $dr = unlink $path || warn "Could not unlink $path: $!";
+          }
+          if ($dr) {
+            print " deleted\n" if $debug;
+            $deleted++;
+          }
+        }
+      }
+
+      printf "\nDeleted %d files, Freed  %.3f KB.\n", $deleted, $deletedbytes/1024;
+    }
+
+    # Delete the project directory
+    if (!$dryrun) {
+      print "Deleting $purgeprjdir\n";
+      BSUtil::cleandir($purgeprjdir);
+      rmdir($purgeprjdir);
     }
   } else {
     echo_help();
