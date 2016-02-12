@@ -124,9 +124,10 @@ Note: the --update-*-db calls are usually only needed when corrupt data has been
  --update-request-db
    Updates the index for all requests.
 
- --remove-old-sources <days> <y> (--debug)
+ --remove-old-sources <days> <y> [--debug] [--dry-run]
    remove sources older than <x> days, but keep <y> number of revisions
    --debug for debug output
+   --dry-run to test removal
 
 Debug Options
 =============
@@ -738,12 +739,16 @@ while (@ARGV) {
     die("ERROR: second argument must be >=1!\n") if $min_revs <1;
 
     my $debug = 0;
-    if ( @ARGV == 1 ) {
-      if ( shift @ARGV eq "--debug") {
-      $debug = 1;
+    my $dryrun = 0;
+    while (@ARGV) {
+      my $arg = shift @ARGV;
+      if ($arg eq "--debug") {
+        $debug = 1;
+      } elsif ($arg eq "--dry-run") {
+        $dryrun = 1;
+      } else {
+        die("ERROR: unrecognized option $arg\n");
       }
-    } elsif ( @ARGV > 1 ) {
-      die("ERROR: too much parameters!\n");
     }
 
     my $mastertimestamp = time - $days*60*60*24;
@@ -969,7 +974,11 @@ while (@ARGV) {
         next if !grep(/$f/, @deletefiles);
         if ( -e $sourcefiles{$f} ) {
           $deletedbytes = $deletedbytes + (stat($sourcefiles{$f}))[7];
-          $dr = unlink $sourcefiles{$f} || warn "Could not unlink $sourcefiles{$f}: $!"; 
+          if ($dryrun) {
+            $dr = 1;
+          } else {
+            $dr = unlink $sourcefiles{$f} || warn "Could not unlink $sourcefiles{$f}: $!";
+          }
           if ($dr) {
             print " deleted\n" if $debug;
             $deleted++;
@@ -983,7 +992,8 @@ while (@ARGV) {
         
       }
       
-      if ($deleted > 0) {
+      if (!$dryrun && $deleted > 0) {
+        print "\nrewriting revision files\n" if $debug;
         # rewrite rev files
         foreach my $revfile (@revfiles) {
           my @revfile;
